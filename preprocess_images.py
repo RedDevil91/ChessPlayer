@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 
@@ -64,6 +65,17 @@ def get_roi(input_image):
     return roi_img
 
 
+def evaluate_square(square):
+    for figure in os.listdir("figures"):
+        fig_img = cv2.imread("figures/" + figure)
+        fig_img = cv2.cvtColor(fig_img, cv2.COLOR_BGR2GRAY)
+        diff = cv2.absdiff(square, fig_img)
+        if np.mean(diff) < 1.0:
+            res, _ = os.path.splitext(figure)
+            return res
+    return "No match"
+
+
 if __name__ == '__main__':
     raw_image = cv2.imread('pictures/screen_00.png')
     thresholded = preprocess_image(raw_image, 220)
@@ -83,8 +95,8 @@ if __name__ == '__main__':
             col_start = col*80
             col_end = (col+1)*80
             square = gray[row_start:row_end, col_start:col_end]
-            shape = square.shape
-            cv2.imwrite('squares/square_%d_%d.png' % (row, col), square)
+            print evaluate_square(square)
+            # cv2.imwrite('squares/square_%d_%d.png' % (row, col), square)
 
     while True:
         key = cv2.waitKey(1) & 0xFF
