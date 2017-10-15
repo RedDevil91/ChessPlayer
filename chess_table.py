@@ -1,37 +1,60 @@
 class Field(object):
-    def __init__(self, row, col):
-        self.row = row
-        self.col = col
-        self.figure = None
+    def __init__(self, number):
+        self.number = number
+        self.figure = 'empty'
         return
 
-    def setFigure(self, figure):
-        self.figure = figure
-        return
+    def getPosition(self):
+        row = self.number / 8
+        col = self.number % 8
+        return row, col
 
 
 class ChessTable(object):
-    column_labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+    base_line = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
+    color_sep = '_'
 
     def __init__(self):
-        self.fields = {(col + str(row + 1)): Field(row + 1, col) for row, col in enumerate(self.column_labels)}
+        self.fields = [Field(field_id) for field_id in xrange(64)]
+        self.initTable()
         return
 
     def initTable(self):
+        # black init section
+        color = 'b'
+        for i, figure in enumerate(self.base_line):
+            self.fields[i].figure = color + self.color_sep + figure
+
+        pawn = color + self.color_sep + 'pawn'
+        start_idx = 8
+        for i in range(8):
+            self.fields[start_idx + i].figure = pawn
+
+        # white init section
+        start_idx = 48
+        color = 'w'
+        pawn = color + self.color_sep + 'pawn'
+        for i in range(8):
+            self.fields[start_idx + i].figure = pawn
+
+        start_idx = 56
+        for i, figure in enumerate(self.base_line):
+            self.fields[start_idx + i].figure = color + self.color_sep + figure
         return
 
-    def setField(self, row, col, figure):
-        field = self.getField(row, col)
-        field.setFigure(figure)
+    def setField(self, field_id, figure):
+        field = self.getField(field_id)
+        field.figure = figure
         return
 
-    def getField(self, row, col):
-        field_key = (col + str(row))
-        return self.fields[field_key]
+    def getField(self, field_id):
+        return self.fields[field_id]
 
-    def moveFigure(self, from_row, from_col, to_row, to_col):
+    def moveFigure(self, from_id, to_id):
+        figure = self.fields[from_id].figure
+        self.fields[to_id].figure = figure
         return
 
 
 if __name__ == '__main__':
-    pass
+    table = ChessTable()
