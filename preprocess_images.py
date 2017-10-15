@@ -2,8 +2,6 @@ import os
 import cv2
 import numpy as np
 
-from win_interface import screenshot
-
 
 class NoTableError(BaseException):
     pass
@@ -77,7 +75,8 @@ def evaluate_square(square):
 
 
 if __name__ == '__main__':
-    raw_image = cv2.imread('pictures/screen_00.png')
+    # raw_image = cv2.imread('pictures/screen_00.png')
+    raw_image = cv2.imread('pictures/board_start3.png')
     thresholded = preprocess_image(raw_image, 220)
     roi = get_roi(thresholded)
     
@@ -86,7 +85,7 @@ if __name__ == '__main__':
 
     gray = preprocess_image(table_image, 30, algo=cv2.THRESH_BINARY)
 
-    cv2.imshow("table", gray)
+    # cv2.imshow("table", gray)
 
     for row in range(8):
         for col in range(8):

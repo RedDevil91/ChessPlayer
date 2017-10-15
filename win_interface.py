@@ -49,6 +49,7 @@ class Mouse(object):
         self.click(x, y, button=button)
         return
 
+
 if __name__ == '__main__':
     import time
 
