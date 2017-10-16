@@ -105,3 +105,4 @@ def get_table_from_screen():
 
 if __name__ == '__main__':
     table = get_table_from_screen()
+    print(table)

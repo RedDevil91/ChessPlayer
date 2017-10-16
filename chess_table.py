@@ -54,7 +54,19 @@ class ChessTable(object):
         self.fields[to_id].figure = figure
         return
 
+    def __str__(self):
+        row_sep_str = "-" * 11 * 8 + "\n"
+        table_str = row_sep_str
+        for row in range(8):
+            for col in range(8):
+                field_id = row * 8 + col
+                field = self.getField(field_id)
+                table_str += "|%10s" % field.figure
+            table_str += "|\n" + row_sep_str
+        return table_str
+
 
 if __name__ == '__main__':
     table = ChessTable()
     table.initTable()
+    print(table)
