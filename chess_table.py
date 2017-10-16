@@ -16,7 +16,6 @@ class ChessTable(object):
 
     def __init__(self):
         self.fields = [Field(field_id) for field_id in range(64)]
-        self.initTable()
         return
 
     def initTable(self):
@@ -58,3 +57,4 @@ class ChessTable(object):
 
 if __name__ == '__main__':
     table = ChessTable()
+    table.initTable()

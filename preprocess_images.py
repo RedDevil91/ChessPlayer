@@ -2,6 +2,9 @@ import os
 import cv2
 import numpy as np
 
+from chess_table import ChessTable
+from win_interface import win_screen
+
 
 class NoTableError(BaseException):
     pass
@@ -71,33 +74,34 @@ def evaluate_square(square):
         if np.mean(diff) < 1.0:
             res, _ = os.path.splitext(figure)
             return res
-    return "No match"
+    else:
+        raise AssertionError
 
 
-if __name__ == '__main__':
-    # raw_image = cv2.imread('pictures/screen_00.png')
-    raw_image = cv2.imread('pictures/board_start3.png')
-    thresholded = preprocess_image(raw_image, 220)
+def get_table_from_screen():
+    screen_img = win_screen()
+    thresholded = preprocess_image(screen_img, 220)
     roi = get_roi(thresholded)
-    
+
     # increment is needed because the table size is 639x639
-    table_image = raw_image[roi.corners[0][1]:roi.corners[2][1]+1, roi.corners[0][0]:roi.corners[2][0]+1]
+    table_image = screen_img[roi.corners[0][1]:roi.corners[2][1] + 1, roi.corners[0][0]:roi.corners[2][0] + 1]
 
     gray = preprocess_image(table_image, 30, algo=cv2.THRESH_BINARY)
 
-    cv2.imshow("table", gray)
+    table = ChessTable()
 
     for row in range(8):
         for col in range(8):
-            row_start = row*80
-            row_end = (row+1)*80
-            col_start = col*80
-            col_end = (col+1)*80
+            row_start = row * 80
+            row_end = (row + 1) * 80
+            col_start = col * 80
+            col_end = (col + 1) * 80
             square = gray[row_start:row_end, col_start:col_end]
-            print(evaluate_square(square))
-            # cv2.imwrite('squares/square_%d_%d.png' % (row, col), square)
+            figure = evaluate_square(square)
+            field_id = row * 8 + col
+            table.setField(field_id, figure)
+    return table
 
-    while True:
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('q'):
-            break
+
+if __name__ == '__main__':
+    table = get_table_from_screen()
