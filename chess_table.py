@@ -15,7 +15,7 @@ class ChessTable(object):
     color_sep = '_'
 
     def __init__(self):
-        self.fields = [Field(field_id) for field_id in xrange(64)]
+        self.fields = [Field(field_id) for field_id in range(64)]
         self.initTable()
         return
 

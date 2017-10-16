@@ -38,7 +38,7 @@ def preprocess_image(input_image, threshold, algo=cv2.THRESH_BINARY_INV):
 
 def get_roi(input_image):
     # find contours on the preprocessed input image
-    contours, hierarchy = cv2.findContours(input_image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, hierarchy = cv2.findContours(input_image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # sort the contours by the area
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     gray = preprocess_image(table_image, 30, algo=cv2.THRESH_BINARY)
 
-    # cv2.imshow("table", gray)
+    cv2.imshow("table", gray)
 
     for row in range(8):
         for col in range(8):
@@ -94,7 +94,7 @@ if __name__ == '__main__':
             col_start = col*80
             col_end = (col+1)*80
             square = gray[row_start:row_end, col_start:col_end]
-            print evaluate_square(square)
+            print(evaluate_square(square))
             # cv2.imwrite('squares/square_%d_%d.png' % (row, col), square)
 
     while True:
