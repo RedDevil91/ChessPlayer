@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 
-from chess_table import ChessTable
+from chess_table import ChessTable, TABLE_FIELD_NUM, SQUARE_SIZE
 from win_interface import win_screen
 
 
@@ -90,19 +90,22 @@ def get_table_from_screen():
 
     table = ChessTable()
 
-    for row in range(8):
-        for col in range(8):
-            row_start = row * 80
-            row_end = (row + 1) * 80
-            col_start = col * 80
-            col_end = (col + 1) * 80
+    for row in range(TABLE_FIELD_NUM):
+        for col in range(TABLE_FIELD_NUM):
+            row_start = row * SQUARE_SIZE
+            row_end = (row + 1) * SQUARE_SIZE
+            col_start = col * SQUARE_SIZE
+            col_end = (col + 1) * SQUARE_SIZE
             square = gray[row_start:row_end, col_start:col_end]
             figure = evaluate_square(square)
-            field_id = row * 8 + col
+            field_id = row * TABLE_FIELD_NUM + col
             table.setField(field_id, figure)
     return table
 
 
 if __name__ == '__main__':
+    import time
+    start = time.time()
     table = get_table_from_screen()
+    print(time.time() - start)
     print(table)
