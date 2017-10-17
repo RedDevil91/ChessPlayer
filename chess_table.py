@@ -16,6 +16,14 @@ class Field(object):
         col = self.number % TABLE_FIELD_NUM
         return row, col
 
+    def setCenter(self, center):
+        self.center = center.astype(np.int16)
+        return
+
+    def getCenter(self):
+        assert self.center is not None, "Center point is None!"
+        return self.center
+
 
 class ChessTable(object):
     base_line = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
@@ -54,7 +62,7 @@ class ChessTable(object):
         field = self.getField(field_id)
         row, col = field.getPosition()
         translate_vector = np.array([row * SQUARE_SIZE + SQUARE_SIZE / 2, col * SQUARE_SIZE + SQUARE_SIZE / 2])
-        field.center = self.top_left + translate_vector
+        field.setCenter(self.top_left + translate_vector)
         field.figure = figure
         return
 
