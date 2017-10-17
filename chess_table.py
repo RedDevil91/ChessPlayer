@@ -1,3 +1,5 @@
+import numpy as np
+
 SQUARE_SIZE = 80
 TABLE_FIELD_NUM = 8
 
@@ -6,10 +8,11 @@ class Field(object):
     def __init__(self, number):
         self.number = number
         self.figure = 'empty'
+        self.center = None
         return
 
     def getPosition(self):
-        row = self.number / TABLE_FIELD_NUM
+        row = self.number // TABLE_FIELD_NUM
         col = self.number % TABLE_FIELD_NUM
         return row, col
 
@@ -18,11 +21,13 @@ class ChessTable(object):
     base_line = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
     color_sep = '_'
 
-    def __init__(self):
+    def __init__(self, top_left):
+        self.top_left = top_left
         self.fields = [Field(field_id) for field_id in range(TABLE_FIELD_NUM**2)]
         return
 
     def initTable(self):
+        # TODO change this mechanism to use the setField method!!!
         # black init section
         color = 'b'
         for i, figure in enumerate(self.base_line):
@@ -47,6 +52,9 @@ class ChessTable(object):
 
     def setField(self, field_id, figure):
         field = self.getField(field_id)
+        row, col = field.getPosition()
+        translate_vector = np.array([row * SQUARE_SIZE + SQUARE_SIZE / 2, col * SQUARE_SIZE + SQUARE_SIZE / 2])
+        field.center = self.top_left + translate_vector
         field.figure = figure
         return
 
@@ -71,6 +79,6 @@ class ChessTable(object):
 
 
 if __name__ == '__main__':
-    table = ChessTable()
+    table = ChessTable([0, 0])
     table.initTable()
     print(table)

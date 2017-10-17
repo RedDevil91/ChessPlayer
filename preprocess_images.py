@@ -88,7 +88,7 @@ def get_table_from_screen():
 
     gray = preprocess_image(table_image, 30, algo=cv2.THRESH_BINARY)
 
-    table = ChessTable()
+    table = ChessTable(roi.corners[0])
 
     for row in range(TABLE_FIELD_NUM):
         for col in range(TABLE_FIELD_NUM):
