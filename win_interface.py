@@ -92,6 +92,21 @@ class Mouse(object):
         self.click(x, y, button=button)
         return
 
+    def leftClick(self, x, y):
+        self.click(x, y)
+        return
+
+    def middleClick(self, x, y):
+        self.click(x, y, button='middle')
+        return
+
+    def rightClick(self, x, y):
+        self.click(x, y, button='right')
+        return
+
+    def __str__(self):
+        return "x:%5d\ny:%5d" % (self.x, self.y)
+
 
 if __name__ == '__main__':
     import time
