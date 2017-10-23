@@ -78,8 +78,16 @@ def evaluate_square(square):
         raise AssertionError
 
 
-def get_table_from_screen():
-    screen_img = win_screen()
+def decide_table_orientation(image):
+    topleft_square = image[0:SQUARE_SIZE, 0:SQUARE_SIZE]
+    topleft_figure = evaluate_square(topleft_square)
+    if topleft_figure.startswith("b_"):
+        return 'white'
+    return 'black'
+
+
+def get_table_from_screen(player='white'):
+    ratio, screen_img = win_screen()
     thresholded = preprocess_image(screen_img, 220)
     roi = get_roi(thresholded)
 
@@ -88,7 +96,9 @@ def get_table_from_screen():
 
     gray = preprocess_image(table_image, 30, algo=cv2.THRESH_BINARY)
 
-    table = ChessTable(roi.corners[0])
+    player = decide_table_orientation(gray)
+
+    table = ChessTable(roi.corners[0], ratio)
 
     for row in range(TABLE_FIELD_NUM):
         for col in range(TABLE_FIELD_NUM):
@@ -98,14 +108,29 @@ def get_table_from_screen():
             col_end = (col + 1) * SQUARE_SIZE
             square = gray[row_start:row_end, col_start:col_end]
             figure = evaluate_square(square)
-            field_id = row * TABLE_FIELD_NUM + col
-            table.setField(field_id, figure)
+            if player == 'white':
+                field_id = (TABLE_FIELD_NUM - row - 1) * TABLE_FIELD_NUM + col
+            else:
+                field_id = row * TABLE_FIELD_NUM + col
+            field = table.setField(field_id, figure)
+            field.setCenter(table.top_left, row, col)
     return table
 
 
 if __name__ == '__main__':
     import time
+    from win_interface import Mouse
+
     start = time.time()
     table = get_table_from_screen()
     print(time.time() - start)
     print(table)
+    # TODO: check the difference between the real and the screenshot pixel values
+    # mouse = Mouse()
+    # from_field = table.getField("e2")
+    # from_point = from_field.getCenter()
+    # to_field = table.getField("e4")
+    # to_point = to_field.getCenter()
+    # mouse.click(from_point[0], from_point[1])
+    # time.sleep(0.2)
+    # mouse.click(to_point[0], to_point[1])
