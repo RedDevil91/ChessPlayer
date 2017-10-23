@@ -19,6 +19,12 @@ def win_screen():
     left = win32api.GetSystemMetrics(win32con.SM_XVIRTUALSCREEN)
     top = win32api.GetSystemMetrics(win32con.SM_YVIRTUALSCREEN)
 
+    user32 = windll.user32
+    user32.SetProcessDPIAware()
+    width2 = win32api.GetSystemMetrics(win32con.SM_CXVIRTUALSCREEN)
+
+    ratio = width / width2
+
     # create a device context
     desktop_dc = win32gui.GetWindowDC(hdesktop)
     img_dc = win32ui.CreateDCFromHandle(desktop_dc)
@@ -45,7 +51,7 @@ def win_screen():
     mem_dc.DeleteDC()
     win32gui.ReleaseDC(hdesktop, desktop_dc)
     win32gui.DeleteObject(screenshot.GetHandle())
-    return img
+    return ratio, img
 
 
 def pil_screenshot():
