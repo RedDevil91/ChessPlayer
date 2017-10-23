@@ -5,31 +5,25 @@ TABLE_FIELD_NUM = 8
 
 
 class Field(object):
-    col_labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
-    def __init__(self, label, row_idx, ratio):
-        self.label = label
-        self.row_idx = row_idx
-        self.figure = 'empty'
-        self.center = None
+    def __init__(self, ratio):
         self.ratio = ratio
-        row, col = self.getPosition()
-        self.translate_vector = self.getTranslation(row, col)
+        self.figure = 'empty'
+
+        self._center = None
+        self._row = None
+        self._col = None
         return
 
-    def getPosition(self):
-        row = self.row_idx
-        col = self.col_labels.index(self.label)
-        return row, col
-
-    def setCenter(self, center):
-        center = self.ratio * center
-        self.center = center.astype(np.int16)
+    def setCenter(self, top_left, row, col):
+        translate = self.getTranslation(row, col)
+        center = self.ratio * (top_left + translate)
+        self._center = center.astype(np.int16)
         return
 
     def getCenter(self):
-        assert self.center is not None, "Center point is None!"
-        return self.center
+        assert self._center is not None, "Center point is None!"
+        return self._center
 
     @staticmethod
     def getTranslation(row, col):
@@ -63,9 +57,8 @@ class ChessTable(object):
 
     def setField(self, field_id, figure):
         field = self.getField(field_id)
-        field.setCenter(self.top_left + field.translate_vector)
         field.figure = figure
-        return
+        return field
 
     def getField(self, field_id):
         if type(field_id) is int:
@@ -76,7 +69,7 @@ class ChessTable(object):
             label = field_id[0]
             idx = int(field_id[1]) - 1 # indexing starts from zero
         if self._fields[label][idx] is None:
-            self._fields[label][idx] = Field(label, idx, self.ratio)
+            self._fields[label][idx] = Field(self.ratio)
         return self._fields[label][idx]
 
     def moveFigure(self, from_id, to_id):
