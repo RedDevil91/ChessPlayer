@@ -5,19 +5,24 @@ TABLE_FIELD_NUM = 8
 
 
 class Field(object):
-    def __init__(self, number):
-        self.number = number
+    col_labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+
+    def __init__(self, label, row_idx, ratio):
+        self.label = label
+        self.row_idx = row_idx
         self.figure = 'empty'
         self.center = None
+        self.ratio = ratio
         self.translate_vector = self.getTranslation()
         return
 
     def getPosition(self):
-        row = self.number // TABLE_FIELD_NUM
-        col = self.number % TABLE_FIELD_NUM
+        row = self.row_idx
+        col = self.col_labels.index(self.label)
         return row, col
 
     def setCenter(self, center):
+        center = self.ratio * center
         self.center = center.astype(np.int16)
         return
 
@@ -35,12 +40,10 @@ class ChessTable(object):
     base_line = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
     color_sep = '_'
 
-    def __init__(self, top_left):
+    def __init__(self, top_left, ratio):
         self.top_left = top_left
-        self.fields = [Field(field_id) for field_id in range(TABLE_FIELD_NUM**2)]
-        self._fields = {label: [] for label in self.col_labels}
-        for _id in range(TABLE_FIELD_NUM**2):
-            self._fields[self.col_labels[_id % 8]].append(Field(_id))
+        self.ratio = ratio
+        self._fields = {label: [None] * 8 for label in self.col_labels}
         return
 
     def initTable(self):
@@ -71,14 +74,11 @@ class ChessTable(object):
             # string type
             label = field_id[0]
             idx = int(field_id[1]) - 1 # indexing starts from zero
+        if self._fields[label][idx] is None:
+            self._fields[label][idx] = Field(label, idx, self.ratio)
         return self._fields[label][idx]
 
     def moveFigure(self, from_id, to_id):
-        # TODO fix this method!
-        # set the from field figure to empty...
-        # use the set and the getfield methods
-        figure = self.fields[from_id].figure
-        self.fields[to_id].figure = figure
         return
 
     def __str__(self):
@@ -93,10 +93,11 @@ class ChessTable(object):
 
 
 if __name__ == '__main__':
-    table = ChessTable([0, 0])
+    table = ChessTable([0, 0], 1.)
     table.getField(55)
     table.getField('h6')
 
     table.setField('h5', 'b_pawn')
+    print(table)
     table.initTable()
     print(table)
