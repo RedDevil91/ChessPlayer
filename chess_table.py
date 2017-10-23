@@ -13,7 +13,8 @@ class Field(object):
         self.figure = 'empty'
         self.center = None
         self.ratio = ratio
-        self.translate_vector = self.getTranslation()
+        row, col = self.getPosition()
+        self.translate_vector = self.getTranslation(row, col)
         return
 
     def getPosition(self):
@@ -30,8 +31,8 @@ class Field(object):
         assert self.center is not None, "Center point is None!"
         return self.center
 
-    def getTranslation(self):
-        row, col = self.getPosition()
+    @staticmethod
+    def getTranslation(row, col):
         return np.array([row * SQUARE_SIZE + SQUARE_SIZE / 2, col * SQUARE_SIZE + SQUARE_SIZE / 2])
 
 
