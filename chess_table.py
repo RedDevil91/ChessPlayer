@@ -6,18 +6,14 @@ TABLE_FIELD_NUM = 8
 
 class Field(object):
 
-    def __init__(self, ratio):
-        self.ratio = ratio
+    def __init__(self):
         self.figure = 'empty'
-
         self._center = None
-        self._row = None
-        self._col = None
         return
 
-    def setCenter(self, top_left, row, col):
-        translate = self.getTranslation(row, col)
-        center = self.ratio * (top_left + translate)
+    def setCenter(self, top_left, x, y):
+        translate = np.array([x, y])
+        center = (top_left + translate)
         self._center = center.astype(np.int16)
         return
 
@@ -27,7 +23,7 @@ class Field(object):
 
     @staticmethod
     def getTranslation(row, col):
-        return np.array([row * SQUARE_SIZE + SQUARE_SIZE / 2, col * SQUARE_SIZE + SQUARE_SIZE / 2])
+        return np.array([col * SQUARE_SIZE + SQUARE_SIZE / 2, row * SQUARE_SIZE + SQUARE_SIZE / 2])
 
 
 class ChessTable(object):
@@ -35,9 +31,8 @@ class ChessTable(object):
     base_line = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
     color_sep = '_'
 
-    def __init__(self, top_left, ratio):
+    def __init__(self, top_left):
         self.top_left = top_left
-        self.ratio = ratio
         self._fields = {label: [None] * 8 for label in self.col_labels}
         return
 
@@ -69,7 +64,7 @@ class ChessTable(object):
             label = field_id[0]
             idx = int(field_id[1]) - 1 # indexing starts from zero
         if self._fields[label][idx] is None:
-            self._fields[label][idx] = Field(self.ratio)
+            self._fields[label][idx] = Field()
         return self._fields[label][idx]
 
     def moveFigure(self, from_id, to_id):
@@ -87,7 +82,7 @@ class ChessTable(object):
 
 
 if __name__ == '__main__':
-    table = ChessTable([0, 0], 1.)
+    table = ChessTable([0, 0])
     table.getField(55)
     table.getField('h6')
 
