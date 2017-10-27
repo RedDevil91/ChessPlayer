@@ -6,59 +6,48 @@ import cv2
 import numpy as np
 
 from ctypes import windll
-from PIL import ImageGrab
 
 
-def win_screen():
-    # grab a handle to the main desktop window
-    hdesktop = win32gui.GetDesktopWindow()
-
-    # determine the size of all monitors in pixels
+class Screen(object):
     width = win32api.GetSystemMetrics(win32con.SM_CXVIRTUALSCREEN)
     height = win32api.GetSystemMetrics(win32con.SM_CYVIRTUALSCREEN)
     left = win32api.GetSystemMetrics(win32con.SM_XVIRTUALSCREEN)
     top = win32api.GetSystemMetrics(win32con.SM_YVIRTUALSCREEN)
-
     user32 = windll.user32
     user32.SetProcessDPIAware()
-    width2 = win32api.GetSystemMetrics(win32con.SM_CXVIRTUALSCREEN)
 
-    ratio = width / width2
+    @classmethod
+    def shot(cls):
+        # grab a handle to the main desktop window
+        hdesktop = win32gui.GetDesktopWindow()
 
-    # create a device context
-    desktop_dc = win32gui.GetWindowDC(hdesktop)
-    img_dc = win32ui.CreateDCFromHandle(desktop_dc)
+        # create a device context
+        desktop_dc = win32gui.GetWindowDC(hdesktop)
+        img_dc = win32ui.CreateDCFromHandle(desktop_dc)
 
-    # create a memory based device context
-    mem_dc = img_dc.CreateCompatibleDC()
+        # create a memory based device context
+        mem_dc = img_dc.CreateCompatibleDC()
 
-    # create a bitmap object
-    screenshot = win32ui.CreateBitmap()
-    screenshot.CreateCompatibleBitmap(img_dc, width, height)
-    mem_dc.SelectObject(screenshot)
+        # create a bitmap object
+        screenshot = win32ui.CreateBitmap()
+        screenshot.CreateCompatibleBitmap(img_dc, cls.width, cls.height)
+        mem_dc.SelectObject(screenshot)
 
-    # copy the screen into our memory device context
-    mem_dc.BitBlt((0, 0), (width, height), img_dc, (left, top), win32con.SRCCOPY)
+        # copy the screen into our memory device context
+        mem_dc.BitBlt((0, 0), (cls.width, cls.height), img_dc, (cls.left, cls.top), win32con.SRCCOPY)
 
-    # save the bitmap to a file
-    signedIntsArray = screenshot.GetBitmapBits(True)
-    img = np.fromstring(signedIntsArray, dtype='uint8')
-    img = img.reshape((height, width, 4))
-    img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+        # save the bitmap to a file
+        signedIntsArray = screenshot.GetBitmapBits(True)
+        img = np.fromstring(signedIntsArray, dtype='uint8')
+        img = img.reshape((cls.height, cls.width, 4))
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
 
-    # free our objects
-    img_dc.DeleteDC()
-    mem_dc.DeleteDC()
-    win32gui.ReleaseDC(hdesktop, desktop_dc)
-    win32gui.DeleteObject(screenshot.GetHandle())
-    return ratio, img
-
-
-def pil_screenshot():
-    user32 = windll.user32
-    user32.SetProcessDPIAware()
-    img = ImageGrab.grab()
-    return img
+        # free our objects
+        img_dc.DeleteDC()
+        mem_dc.DeleteDC()
+        win32gui.ReleaseDC(hdesktop, desktop_dc)
+        win32gui.DeleteObject(screenshot.GetHandle())
+        return img
 
 
 class Mouse(object):
@@ -126,8 +115,5 @@ if __name__ == '__main__':
     time.sleep(0.5)
     mouse.doubleclick(500, 200)
 
-    # img = pil_screenshot()
-    # img.show()
-
-    img = win_screen()
+    img = Screen.shot()
     cv2.imwrite('test.png', img)
