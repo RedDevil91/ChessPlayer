@@ -31,7 +31,11 @@ class ChessTable(object):
     base_line = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
     color_sep = '_'
 
-    def __init__(self, top_left):
+    def __init__(self, top_left, player):
+        self.player = player
+        self.labels = list(self.col_labels)
+        if self.player == 'black':
+            self.labels.reverse()
         self.top_left = top_left
         self._fields = {label: [None] * 8 for label in self.col_labels}
         return
@@ -57,7 +61,7 @@ class ChessTable(object):
 
     def getField(self, field_id):
         if type(field_id) is int:
-            label = self.col_labels[field_id % 8]
+            label = self.labels[field_id % 8]
             idx = field_id // 8
         else:
             # string type
@@ -66,9 +70,6 @@ class ChessTable(object):
         if self._fields[label][idx] is None:
             self._fields[label][idx] = Field()
         return self._fields[label][idx]
-
-    def moveFigure(self, from_id, to_id):
-        return
 
     def __str__(self):
         row_sep_str = "-" * 11 * TABLE_FIELD_NUM + "\n"
@@ -82,7 +83,7 @@ class ChessTable(object):
 
 
 if __name__ == '__main__':
-    table = ChessTable([0, 0])
+    table = ChessTable([0, 0], 'white')
     table.getField(55)
     table.getField('h6')
 
