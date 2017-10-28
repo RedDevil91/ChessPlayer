@@ -68,7 +68,7 @@ class ChessTable(object):
         if type(field_id) is int:
             label = self.labels[field_id % 8]
             idx = field_id // 8
-            if self.player == "black":
+            if self.player == "white":
                 idx = TABLE_FIELD_NUM - 1 - idx
         else:
             # string type
