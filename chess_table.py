@@ -11,9 +11,8 @@ class Field(object):
         self._center = None
         return
 
-    def setCenter(self, top_left, x, y):
-        translate = np.array([x, y])
-        center = (top_left + translate)
+    def setCenter(self, top_left, translate):
+        center = top_left + translate
         self._center = center.astype(np.int16)
         return
 
@@ -54,15 +53,23 @@ class ChessTable(object):
                 self.setField(label + str(st+1), second_figure)
         return
 
-    def setField(self, field_id, figure):
+    def setFields(self, fields_prop):
+        for i, (figure, translate_vec) in enumerate(fields_prop):
+            self.setField(i, figure, translate_vec)
+        return
+
+    def setField(self, field_id, figure, translation=np.array([0, 0])):
         field = self.getField(field_id)
         field.figure = figure
+        field.setCenter(self.top_left, translation)
         return field
 
     def getField(self, field_id):
         if type(field_id) is int:
             label = self.labels[field_id % 8]
             idx = field_id // 8
+            if self.player == "black":
+                idx = TABLE_FIELD_NUM - 1 - idx
         else:
             # string type
             label = field_id[0]
