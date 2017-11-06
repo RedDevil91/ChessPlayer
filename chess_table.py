@@ -78,6 +78,29 @@ class ChessTable(object):
             self._fields[label][idx] = Field()
         return self._fields[label][idx]
 
+    def getFenString(self):
+        rows = [[None] * 8 for _ in range(8)]
+        for column, fields in self._fields.items():
+            col_idx = self.col_labels.index(column)
+            for row_idx, field in enumerate(fields):
+                rows[row_idx][col_idx] = self.getFenChar(field.figure)
+        rows.reverse()
+        out_list = []
+        for row in rows:
+            if row.count(1) > 1:
+                prevChar = None
+                alt_row = []
+                for char in row:
+                    if prevChar is None or isinstance(char, str) or isinstance(prevChar, str):
+                        alt_row.append(char)
+                    else:
+                        alt_row[-1] += char
+                    prevChar = char
+            else:
+                alt_row = row.copy()
+            out_list.append("".join([str(e) for e in alt_row]))
+        return "/".join(out_list) + " " + self.player[0]
+
     def __str__(self):
         row_sep_str = "-" * 11 * TABLE_FIELD_NUM + "\n"
         table_str = row_sep_str
@@ -87,6 +110,21 @@ class ChessTable(object):
                 table_str += "|%10s" % field.figure
             table_str += "|\n" + row_sep_str
         return table_str
+
+    @staticmethod
+    def getFenChar(color_figure):
+        try:
+            color, figure = color_figure.split("_")
+            if figure == "knight":
+                fen_char = "n"
+            else:
+                fen_char = figure[0]
+            if color == "w":
+                return fen_char.upper()
+            else:
+                return fen_char
+        except ValueError:
+            return 1
 
 
 if __name__ == '__main__':
@@ -98,3 +136,4 @@ if __name__ == '__main__':
     print(table)
     table.initTable()
     print(table)
+    print(table.getFenString())
