@@ -4,6 +4,7 @@ import numpy as np
 
 from chess_table import ChessTable, TABLE_FIELD_NUM, SQUARE_SIZE
 from win_interface import Screen, Mouse
+from stockfish_interface import StockFishEngine
 
 
 class NoTableError(BaseException):
@@ -34,17 +35,26 @@ class RegionOfInterest(object):
 
 
 class GameEngine(object):
-    def __init__(self):
+    def __init__(self, depth=20):
+        self.stockfish = StockFishEngine(depth=depth)
         self.mouse = Mouse()
         self.table = None
         return
 
     def newGame(self):
         table_roi, table_image = self.get_table_from_screen()
+        # table_roi, table_image = self.get_table_from_picture("pictures/screen_error.png")
 
         player = self.decide_table_orientation(table_image)
         self.table = ChessTable(table_roi.corners[0], player)
         self.setFields(table_image)
+        return
+
+    def move(self):
+        self.stockfish.setFenPosition(self.table.getFenString())
+        move = self.stockfish.getBestMove()
+        print(move)
+        self.moveFigure(move[:2], move[2:])
         return
 
     def setFields(self, table_image):
@@ -68,9 +78,8 @@ class GameEngine(object):
         to_field = self.table.getField(to_pos)
         to_point = to_field.getCenter()
         self.mouse.click(from_point[0], from_point[1])
-        time.sleep(1)
         self.mouse.click(to_point[0], to_point[1])
-        time.sleep(1)
+        time.sleep(2)
         return
 
     @classmethod
@@ -81,6 +90,18 @@ class GameEngine(object):
 
         # increment is needed because the table size is 639x639
         table_image = screen_img[table_roi.corners[0][1]:table_roi.corners[2][1] + 1, table_roi.corners[0][0]:table_roi.corners[2][0] + 1]
+        table_image = cls.preprocess_image(table_image, 30, algo=cv2.THRESH_BINARY)
+        return table_roi, table_image
+
+    @classmethod
+    def get_table_from_picture(cls, picture):
+        screen_img = cv2.imread(picture)
+        thresholded = cls.preprocess_image(screen_img, 220)
+        table_roi = cls.get_roi(thresholded)
+
+        # increment is needed because the table size is 639x639
+        table_image = screen_img[table_roi.corners[0][1]:table_roi.corners[2][1] + 1,
+                      table_roi.corners[0][0]:table_roi.corners[2][0] + 1]
         table_image = cls.preprocess_image(table_image, 30, algo=cv2.THRESH_BINARY)
         return table_roi, table_image
 
@@ -125,7 +146,7 @@ class GameEngine(object):
             fig_img = cv2.imread("figures/" + figure)
             fig_img = cv2.cvtColor(fig_img, cv2.COLOR_BGR2GRAY)
             diff = cv2.absdiff(square, fig_img)
-            if np.mean(diff) < 1.0:
+            if np.mean(diff) < 5.0:
                 res, _ = os.path.splitext(figure)
                 return res
         else:
@@ -141,11 +162,24 @@ class GameEngine(object):
 if __name__ == '__main__':
     import time
 
-    engine = GameEngine()
-    engine.newGame()
-    if engine.table.player == "black":
-        engine.moveFigure("d7", "d5")
-        engine.moveFigure("g8", "f6")
-    else:
-        engine.moveFigure("e2", "e4")
-        engine.moveFigure("b1", "c3")
+    # TODO consider using ponder move to precalculate in different subprocess!!!
+    # TODO consider adaptive depth
+    # TODO create opponent move checking algorithm
+    # TODO check how stockfish works when check-mate
+
+    engine = GameEngine(depth=25)
+    i = 0
+    while i < 50:
+        engine.newGame()
+        engine.move()
+        i += 1
+
+    # engine.newGame()
+    # print(engine.table.getFenString())
+    #
+    # if engine.table.player == "black":
+    #     engine.moveFigure("d7", "d5")
+    #     engine.moveFigure("g8", "f6")
+    # else:
+    #     engine.moveFigure("e2", "e4")
+    #     engine.moveFigure("b1", "c3")
