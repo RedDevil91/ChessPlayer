@@ -37,17 +37,17 @@ class Screen(object):
         mem_dc.BitBlt((0, 0), (cls.width, cls.height), img_dc, (cls.left, cls.top), win32con.SRCCOPY)
 
         # save the bitmap to a file
-        signedIntsArray = screenshot.GetBitmapBits(True)
-        img = np.fromstring(signedIntsArray, dtype='uint8')
-        img = img.reshape((cls.height, cls.width, 4))
-        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+        signed_ints_array = screenshot.GetBitmapBits(True)
+        screen_img = np.fromstring(signed_ints_array, dtype='uint8')
+        screen_img = screen_img.reshape((cls.height, cls.width, 4))
+        screen_img = cv2.cvtColor(screen_img, cv2.COLOR_RGBA2RGB)
 
         # free our objects
         img_dc.DeleteDC()
         mem_dc.DeleteDC()
         win32gui.ReleaseDC(hdesktop, desktop_dc)
         win32gui.DeleteObject(screenshot.GetHandle())
-        return img
+        return screen_img
 
 
 class Mouse(object):
