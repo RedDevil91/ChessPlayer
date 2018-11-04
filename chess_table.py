@@ -12,6 +12,9 @@ class Field(object):
         self._center = None
         return
 
+    def __repr__(self):
+        return "Field({figure})".format(figure=self.figure)
+
     @property
     def center(self):
         assert self._center is not None, "Center point is None!"
@@ -33,12 +36,11 @@ class Field(object):
 
     @property
     def fen_char(self):
-        return self.getFenChar(self.figure)
+        return self.getFenChar()
 
-    @staticmethod
-    def getFenChar(color_figure):
+    def getFenChar(self):
         try:
-            color, figure = color_figure.split("_")
+            color, figure = self.figure.split("_")
             if figure == "knight":
                 fen_char = "n"
             else:
@@ -56,15 +58,19 @@ class Field(object):
 
 
 class ChessTable(object):
-    __slots__ = "player", "top_left", "_fields"
+    __slots__ = "player", "top_left", "_fields", "_labels"
     col_labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     base_line = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
     color_sep = '_'
 
     def __init__(self, player, top_left=np.array([0, 0])):
         self.player = player
+        assert self.player in ("white", "black"), "Wrong color for player!"
         self.top_left = top_left
         self._fields = None
+        self._labels = self.col_labels.copy()
+        if self.player == "black":
+            self._labels.reverse()
         return
 
     def initTable(self):
@@ -74,7 +80,7 @@ class ChessTable(object):
         reverse = [False, True]
         for col, st, rev in zip(colors, start_pos, reverse):
             pawn = col + self.color_sep + 'pawn'
-            for label, figure in zip(self.col_labels, self.base_line):
+            for label, figure in zip(self._labels, self.base_line):
                 fig = col + self.color_sep + figure
                 first_figure = fig if not rev else pawn
                 second_figure = pawn if not rev else fig
@@ -106,7 +112,7 @@ class ChessTable(object):
                 row_idx = TABLE_FIELD_NUM - 1 - row_idx
         else:
             # string type
-            col_idx = self.col_labels.index(field_id[0])
+            col_idx = self._labels.index(field_id[0])
             row_idx = int(field_id[1]) - 1  # indexing starts from zero
         return self.fields[row_idx][col_idx]
 
@@ -131,23 +137,3 @@ class ChessTable(object):
 
     def __repr__(self):
         return self.getFenString()
-
-
-if __name__ == '__main__':
-    table = ChessTable('white')
-    print(id(table.getField(23)))
-    print(id(table.getField('h6')))
-
-    table.setField('e5', 'b_pawn')
-    print(table)
-    table.initTable()
-    print(table)
-
-    table = ChessTable('black')
-    print(id(table.getField(40)))
-    print(id(table.getField('h6')))
-
-    table.setField('e5', 'b_pawn')
-    print(table)
-    table.initTable()
-    print(table)
