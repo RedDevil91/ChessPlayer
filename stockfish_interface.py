@@ -1,79 +1,86 @@
 import subprocess
-import time
 import psutil
+import re
 
-stockfish_engine_pth = r"C:\Users\RedDevil91\StockFish\stockfish-8-win\Windows\stockfish_8_x64.exe"
+MAX_HASH_SIZE = 1048576
+MAX_THREAD_COUNT = 128
+ENGINE_PATH = r"C:\Users\RedDevil91\StockFish\stockfish-8-win\Windows\stockfish_8_x64.exe"
 
 
 class StockFishEngine(object):
-    def __init__(self, depth=20):
-        self.stockfish_proc = subprocess.Popen(
-            stockfish_engine_pth,
+    best_move_ponder = re.compile("^bestmove\s(?P<best>\w+)\sponder\s(?P<ponder>\w+)$")
+    ready_ok = re.compile("^readyok$")
+
+    set_option_cmd = "setoption name"
+    start_pos = "position startpos"
+    fen_pos = "position fen"
+
+    def __init__(self):
+        self.process = None
+        return
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return
+
+    def open(self):
+        self.process = subprocess.Popen(
+            ENGINE_PATH,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             bufsize=1,
             universal_newlines=True
         )
-        self.depth = depth
         self.setOptions()
         return
 
-    def setOptions(self):
-        self.newCommand("uci")
-        self.isReady()
-        thread_cnt = psutil.cpu_count() - 2
-        hash_size = psutil.virtual_memory().available / (2 * 1024 * 1024)
-        self.newCommand("setoption name Threads value %d" % thread_cnt)
-        self.isReady()
-        self.newCommand("setoption name Hash value %d" % int(hash_size))
-        self.isReady()
+    def close(self):
+        self.runCommand("quit")
+        self.process.terminate()
         return
 
-    def newCommand(self, command):
-        self.stockfish_proc.stdin.write(command + "\n")
+    def runCommand(self, command, *args):
+        self.process.stdin.write(command + " ".join(args) + "\n")
+        return
+
+    def setOptions(self):
+        # TODO: read configs from config file!!!
+        self.runCommand("uci")
+        thread_cnt = psutil.cpu_count() - 2
+        thread_cnt = thread_cnt if thread_cnt <= MAX_THREAD_COUNT else MAX_THREAD_COUNT
+        hash_size = psutil.virtual_memory().available
+        hash_size = hash_size if hash_size <= MAX_HASH_SIZE else MAX_HASH_SIZE
+        self.runCommand(self.set_option_cmd, *["Threads", "value", str(thread_cnt)])
+        self.runCommand(self.set_option_cmd, *["Hash", "value", str(hash_size)])
+        self.isReady()
         return
 
     def isReady(self):
-        self.newCommand("isready")
+        self.runCommand("isready")
         while True:
-            line = self.stockfish_proc.stdout.readline().strip()
-            if line == "readyok":
+            line = self.process.stdout.readline().strip()
+            if self.ready_ok.match(line):
                 return True
 
-    def setPositionFromStart(self, moves):
-        move_str = " ".join(moves)
-        self.newCommand("position startpos moves %s" % move_str)
+    def setPositionFromStart(self, moves=None):
+        self.runCommand(self.start_pos, *["moves", *moves] if moves else [])
         return
 
     def setFenPosition(self, fen):
-        self.newCommand("position fen %s" % fen)
+        self.runCommand(self.fen_pos, *[fen])
         return
 
+    def startCalculation(self, options=None):
+        self.runCommand("go", *options if options else [])
+
     def getBestMove(self):
-        self.newCommand("go depth %d" % self.depth)
         while True:
-            line = self.stockfish_proc.stdout.readline().strip()
-            if line.startswith("bestmove"):
-                break
-        return line.split(" ")[1]
-
-
-if __name__ == '__main__':
-    chess_engine = StockFishEngine()
-    start = time.time()
-    test_moves = ["e2e4", "e7e5"]
-    chess_engine.setPositionFromStart(test_moves)
-    next_move = chess_engine.getBestMove()
-    test_moves.append(next_move)
-    print(next_move)
-    chess_engine.setPositionFromStart(test_moves)
-    next_move = chess_engine.getBestMove()
-    print(next_move)
-    print(time.time() - start)
-
-    start = time.time()
-    chess_engine.setFenPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w")
-    next_move = chess_engine.getBestMove()
-    print(next_move)
-    print(time.time() - start)
-    print("END")
+            line = self.process.stdout.readline().strip()
+            res = self.best_move_ponder.search(line)
+            if res:
+                res_dict = res.groupdict()
+                return res_dict["best"], res_dict["ponder"]
